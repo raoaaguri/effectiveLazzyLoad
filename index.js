@@ -1,5 +1,5 @@
 let autoResize = (function() {
-    const initialRange = 20;
+    const initialRange = 20; // Variable to create inital records on the page...
     const rootElement = document.getElementById("root");
     let be_data = []; // Data from the backend
     let topList = []; // Saving top data
@@ -7,11 +7,11 @@ let autoResize = (function() {
     let maxScrollHeight = 0; // Trigger event once crossing the Max Scroll Height
     let minScrollHeight = 0; // Trigger event once crossing the Min Scroll Height
     let appendFrom = 0; // This variable is utilized while adding the new data at the bottom
-    let initialSize = 0; // This variable is utilized while adding the new data at the bottom
-    let removeFrom = 0;
+    let initialSize = 0; // This variable is utilized while adding the new data at the top
+    let removeFrom = 0; // This variable is user to remove at index
 
     let init = function() {
-
+        //Creating dummy data...
         be_data = getData(1,100);
         createDiVContainer();
         console.log("be_data:" + be_data);
@@ -41,10 +41,12 @@ let autoResize = (function() {
         insertItemsByRange(divEle);
         rootElement.appendChild(divEle);
 
+        //Adding Scroll events
         divEle.addEventListener("scroll", (et) => {
-
+            //Once you reach the bottom of the container
             if(et.target.scrollTop >= maxScrollHeight) {
                 console.log("Reached End of the scroll");
+                //passing a config to say what need to be done useing ScrollDirection value
                 let config = {
                     ele: et.target,
                     scrollDirection: 'down',
@@ -53,8 +55,10 @@ let autoResize = (function() {
                 updateItems(config);
             }
 
+            //Once you reach the top of the container
             if(et.target.scrollTop <= minScrollHeight) {
                 console.log("Reached top of the scroll : " + minScrollHeight);
+                //passing a config to say what need to be done useing ScrollDirection value
                 let config = {
                     ele: et.target,
                     scrollDirection: 'up',
@@ -67,7 +71,7 @@ let autoResize = (function() {
         })
 
     }
-
+    // Updates the container based on the Scroll Direction provided in config
     let updateItems = function(config) {
 
         if(config.scrollDirection == 'down') {
@@ -76,15 +80,21 @@ let autoResize = (function() {
                 topList.push(config.ele.childNodes[removeFrom]);
                 //Removeing the top child items from the table..
                 removeItem(config.ele, config.ele.childNodes[removeFrom]);
-
+                //If appendForm reaches backend data length don't add any new row
                 if(appendFrom >= be_data.length) {
                     return;
                 } else {
+                    // If Bottom List has values take from it else create elements 
                     if(bottomList.length > 0) {
-                        insertItem(config.ele, bottomList[0].childNodes[0].nodeValue);
+                        //Adding Back the elements to Contaier as we are moving DOWN  
+                        addItem(config.ele, bottomList[0]);
+                        // Removing from Bottom list as we started adding them back to the main container
+                        //Used Array Shift Property to remove the element from top 
                         bottomList.shift(i);
                     } else {
+                        // Creating new Nodes if the Bottom list is empty
                         insertItem(config.ele, be_data[appendFrom]);
+                        //Below variable keep a count from where it need to start appending the new nodes..
                         appendFrom++;
                     }
                 }
@@ -96,13 +106,16 @@ let autoResize = (function() {
             if(topList.length > 0) {
                 console.log("Start topList : " + topList.length);
                 for(let i = topList.length-1, j=0; j < config.count; j++, i--) {
+
                     //Pushing the bottom data to the bottomList by pushing to the top of array and which can be moved to local memory
+                    //Used Array 'unshift' Property to push the node to top always, If we use PUSH method it will start adding from in from bottom and first node will e the last node  
                     bottomList.unshift(config.ele.childNodes[initialSize-1]);
                     //Removeing the bottom child items from the table..
                     removeItem(config.ele, config.ele.childNodes[initialSize-1]);
 
-                    console.log("topList[i] : " + topList[i]);
+                    //Adding Back the elements to Contaier as we are moving UP    
                     config.ele.insertBefore(topList[i], config.ele.firstChild);
+                    // Removing from Top list as we started adding them back to the main container
                     topList.pop();
 
                 }
@@ -111,10 +124,17 @@ let autoResize = (function() {
         }
     }
 
+    // Removes a chiled node from a given element 
     let removeItem = function(ele, node) {
         ele.removeChild(node);
     }
 
+    // Adds a chiled node from a given element     
+    let addItem = function(ele, node){
+        ele.appendChild(node);
+    }
+
+    // Create a new node and insert them to give element 
     let insertItem = function(ele, text) {
         let textNode = document.createTextNode(text);
         let item = document.createElement("div");
@@ -123,6 +143,7 @@ let autoResize = (function() {
         ele.appendChild(item);
     }
 
+    // Creates new elements based on initial range variable value
     let insertItemsByRange = function(ele) {
         be_data.forEach((data,indx) => {
             if(initialRange <= indx) {
